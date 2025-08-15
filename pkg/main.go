@@ -25,8 +25,8 @@ func main() {
 
 	job := func() {
 		filename := bot.GenerateImage()
-		fileKey := bot.UploadImage(topicId, token, filename)
-		bot.PostMessage(topicId, token, fileKey)
+		fileKey := bot.UploadImage(baseUrl, channelID, token, filename)
+		bot.PostMessage(baseUrl, channelID, token, fileKey)
 	}
 
 	c := cron.New()
