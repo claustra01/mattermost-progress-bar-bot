@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/claustra01/typetalk-progress-bar-bot/pkg/date"
+	"github.com/claustra01/mattermost-progress-bar-bot/pkg/date"
 	"gocv.io/x/gocv"
 )
 

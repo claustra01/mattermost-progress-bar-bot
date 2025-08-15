@@ -3,19 +3,24 @@ package main
 import (
 	"os"
 
-	"github.com/claustra01/typetalk-progress-bar-bot/pkg/bot"
+	"github.com/claustra01/mattermost-progress-bar-bot/pkg/bot"
 	"github.com/robfig/cron/v3"
 )
 
 func main() {
-	topicId := os.Getenv("TYPETALK_TOPIC_ID")
-	if topicId == "" {
-		panic("TYPETALK_TOPIC_ID is not set")
+	baseUrl := os.Getenv("MATTERMOST_BASE_URL")
+	if baseUrl == "" {
+		panic("MATTERMOST_BASE_URL is not set")
 	}
 
-	token := os.Getenv("TYPETALK_TOKEN")
+	channelID := os.Getenv("MATTERMOST_CHANNEL_ID")
+	if channelID == "" {
+		panic("MATTERMOST_CHANNEL_ID is not set")
+	}
+
+	token := os.Getenv("MATTERMOST_TOKEN")
 	if token == "" {
-		panic("TYPETALK_TOKEN is not set")
+		panic("MATTERMOST_TOKEN is not set")
 	}
 
 	job := func() {

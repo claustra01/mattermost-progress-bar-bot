@@ -1,4 +1,4 @@
-module github.com/claustra01/typetalk-progress-bar-bot
+module github.com/claustra01/mattermost-progress-bar-bot
 
 go 1.22.2
 

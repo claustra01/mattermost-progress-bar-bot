@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/claustra01/typetalk-progress-bar-bot/pkg/date"
+	"github.com/claustra01/mattermost-progress-bar-bot/pkg/date"
 )
 
 func UploadImage(topicId string, token string, filename string) string {
