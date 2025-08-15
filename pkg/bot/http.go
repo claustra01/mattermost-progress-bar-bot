@@ -96,7 +96,10 @@ func UploadImage(baseUrl string, channelID string, token string, filename string
 		slog.Error("Error copying file to form file:", err)
 		return ""
 	}
-	w.Close()
+	if err := w.Close(); err != nil {
+		slog.Error("Error closing writer:", err)
+		return ""
+	}
 
 	// create request
 	url := fmt.Sprintf("%s/api/v4/files", baseUrl)
