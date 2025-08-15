@@ -1,0 +1,6 @@
+services:
+  bot:
+    build: .
+    environment:
+      - TYPETALK_TOPIC_ID=${TYPETALK_TOPIC_ID}
+      - TYPETALK_TOKEN=${TYPETALK_TOKEN}
