@@ -20,6 +20,10 @@ func PostMessage(baseUrl string, channelID string, token string, fileKey string)
 	progress := date.GetProgress(now)
 	remainingDays := date.GetRemainingDays(now)
 
+	if remainingDays < 0 {
+		return
+	}
+
 	var message string
 	if remainingDays > 0 {
 		message = fmt.Sprintf("プログラム全体の%.f%%が経過しました。成果発表会まであと%d日です。", progress*100, remainingDays)
@@ -65,12 +69,7 @@ func PostMessage(baseUrl string, channelID string, token string, fileKey string)
 		slog.Error("Error reading response:", err)
 		return
 	}
-	slog.Info("Reponse:", "URL", url, "Body", string(respBody))
-
-	// shutdown bot
-	if remainingDays <= 0 {
-		os.Exit(0)
-	}
+	slog.Info("Response:", "URL", url, "Body", string(respBody))
 }
 
 func UploadImage(baseUrl string, channelID string, token string, filename string) string {
