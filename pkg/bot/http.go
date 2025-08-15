@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"time"
@@ -13,71 +12,8 @@ import (
 	"github.com/claustra01/mattermost-progress-bar-bot/pkg/date"
 )
 
-func UploadImage(topicId string, token string, filename string) string {
-	url := fmt.Sprintf("https://typetalk.com/api/v1/topics/%s/attachments?typetalkToken=%s", topicId, token)
-
-	file, err := os.Open(filename)
-	if err != nil {
-		slog.Error("Error opening file:", err)
-		return ""
-	}
-	defer file.Close()
-
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-
-	part, err := writer.CreateFormFile("file", filename)
-	if err != nil {
-		slog.Error("Error creating form file:", err)
-		return ""
-	}
-
-	_, err = io.Copy(part, file)
-	if err != nil {
-		slog.Error("Error copying file to form file:", err)
-		return ""
-	}
-
-	err = writer.Close()
-	if err != nil {
-		slog.Error("Error closing writer:", err)
-		return ""
-	}
-
-	req, err := http.NewRequest("POST", url, body)
-	if err != nil {
-		slog.Error("Error creating request:", err)
-		return ""
-	}
-
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		slog.Error("Error sending request:", err)
-		return ""
-	}
-	defer resp.Body.Close()
-
-	responseBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		slog.Error("Error reading response:", err)
-		return ""
-	}
-
-	data, err := UnmarshalRespBody(responseBody)
-	if err != nil {
-		slog.Error("Error unmarshalling response body:", err)
-		return ""
-	}
-
-	return data.FileKey
-}
-
-func PostMessage(topicId string, token string, fileKey string) {
-	url := fmt.Sprintf("https://typetalk.com/api/v1/topics/%s?typetalkToken=%s", topicId, token)
-
+func PostMessage(baseUrl string, channelID string, token string, fileKey string) {
+	// create message
 	now := time.Now()
 	progress := date.GetProgress(now)
 	remainingDays := date.GetRemainingDays(now)
@@ -91,25 +27,32 @@ func PostMessage(topicId string, token string, fileKey string) {
 		os.Exit(1)
 	}
 
-	body := PostMessageRequest{
-		Message:  message,
-		FileKeys: []string{fileKey},
+	// create request body
+	body := CreatePostRequestBody{
+		ChannelID: channelID,
+		Message:   message,
+		RootID:    nil,
+		FileIDs:   []string{fileKey},
 	}
-	data, err := MarshalReqBody(body)
+	data, err := MarshalCreatePostReqBody(body)
 	if err != nil {
 		slog.Error("Error marshalling request body:", err)
 		return
 	}
 
+	// create request
+	url := fmt.Sprintf("%s/api/v4/posts", baseUrl)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
 		slog.Error("Error creating request:", err)
 		return
 	}
-
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
-	client := &http.Client{}
+	// send request
+	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		slog.Error("Error sending request:", err)
@@ -122,6 +65,66 @@ func PostMessage(topicId string, token string, fileKey string) {
 		slog.Error("Error reading response:", err)
 		return
 	}
-
 	slog.Info("Request:", "URL", url, "Body", string(respBody))
 }
+
+// func UploadImage(url string, channelID string, token string, filename string) string {
+// 	// open tmp file
+// 	file, err := os.Open(filename)
+// 	if err != nil {
+// 		slog.Error("Error opening file:", err)
+// 		return ""
+// 	}
+// 	defer file.Close()
+
+// 	body := &bytes.Buffer{}
+// 	writer := multipart.NewWriter(body)
+
+// 	part, err := writer.CreateFormFile("file", filename)
+// 	if err != nil {
+// 		slog.Error("Error creating form file:", err)
+// 		return ""
+// 	}
+
+// 	_, err = io.Copy(part, file)
+// 	if err != nil {
+// 		slog.Error("Error copying file to form file:", err)
+// 		return ""
+// 	}
+
+// 	err = writer.Close()
+// 	if err != nil {
+// 		slog.Error("Error closing writer:", err)
+// 		return ""
+// 	}
+
+// 	req, err := http.NewRequest("POST", url, body)
+// 	if err != nil {
+// 		slog.Error("Error creating request:", err)
+// 		return ""
+// 	}
+
+// 	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+// 	client := &http.Client{}
+// 	resp, err := client.Do(req)
+// 	if err != nil {
+// 		slog.Error("Error sending request:", err)
+// 		return ""
+// 	}
+// 	defer resp.Body.Close()
+
+// 	responseBody, err := io.ReadAll(resp.Body)
+// 	if err != nil {
+// 		slog.Error("Error reading response:", err)
+// 		return ""
+// 	}
+
+// 	data, err := UnmarshalRespBody(responseBody)
+// 	if err != nil {
+// 		slog.Error("Error unmarshalling response body:", err)
+// 		return ""
+// 	}
+
+// 	return data.FileKey
+// }
