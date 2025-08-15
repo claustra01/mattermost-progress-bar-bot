@@ -4,7 +4,10 @@ ENV GOPATH /go
 
 WORKDIR /go/src/gocv.io/x/gocv
 
-COPY . .
+COPY go.mod go.sum ./
+RUN go mod download
 
+COPY . .
 RUN go build -o /bin/bot ./pkg
+
 ENTRYPOINT ["/bin/bot"]
