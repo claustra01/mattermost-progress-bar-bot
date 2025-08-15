@@ -5,9 +5,9 @@ import (
 )
 
 type CreatePostRequestBody struct {
-	ChannelID string    `json:"channel_id"`
-	Message   string    `json:"message"`
-	RootID    *string   `json:"root_id"`
+	ChannelID string   `json:"channel_id"`
+	Message   string   `json:"message"`
+	RootID    *string  `json:"root_id"`
 	FileIDs   []string `json:"file_ids"`
 }
 
@@ -36,8 +36,8 @@ type UploadedFileInfo struct {
 }
 
 type UploadFileResponseBody struct {
-	FileInfos []UploadedFileInfo  `json:"file_infos"`
-	ClientIDs []string            `json:"client_ids"`
+	FileInfos []UploadedFileInfo `json:"file_infos"`
+	ClientIDs []string           `json:"client_ids"`
 }
 
 func UnmarshalUploadFileResponseBody(raw []byte) (UploadFileResponseBody, error) {
