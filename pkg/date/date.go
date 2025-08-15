@@ -6,8 +6,8 @@ import (
 
 const (
 	// "YYYY/MM/DD"
-	StartDate = "2024/06/15"
-	EndDate   = "2025/03/09"
+	StartDate = "2025/06/02"
+	EndDate   = "2026/02/28"
 )
 
 func StrToDate(str string) time.Time {

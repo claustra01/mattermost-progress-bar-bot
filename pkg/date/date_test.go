@@ -12,9 +12,9 @@ func TestGetRemainingDays(t *testing.T) {
 		now    time.Time
 		expect int
 	}{
-		{time.Date(2024, 7, 22, 6, 0, 0, 0, time.Now().Location()), 230},
-		{time.Date(2025, 3, 8, 6, 0, 0, 0, time.Now().Location()), 1},
-		{time.Date(2025, 3, 9, 6, 0, 0, 0, time.Now().Location()), 0},
+		{time.Date(2025, 8, 22, 6, 0, 0, 0, time.Now().Location()), 190},
+		{time.Date(2026, 2, 27, 6, 0, 0, 0, time.Now().Location()), 1},
+		{time.Date(2026, 2, 28, 6, 0, 0, 0, time.Now().Location()), 0},
 	}
 
 	for _, tt := range tests {
