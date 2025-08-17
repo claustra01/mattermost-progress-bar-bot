@@ -14,14 +14,14 @@ import (
 	"github.com/claustra01/mattermost-progress-bar-bot/pkg/date"
 )
 
-func PostMessage(baseUrl string, channelID string, token string, fileKey string) {
+func PostMessage(baseUrl string, channelID string, token string, fileKey string) error {
 	// create message
 	now := time.Now()
 	progress := date.GetProgress(now)
 	remainingDays := date.GetRemainingDays(now)
 
 	if remainingDays < 0 {
-		return
+		return fmt.Errorf("invalid remaining days: %d", remainingDays)
 	}
 
 	var message string
@@ -40,16 +40,14 @@ func PostMessage(baseUrl string, channelID string, token string, fileKey string)
 	}
 	data, err := MarshalCreatePostReqBody(body)
 	if err != nil {
-		slog.Error("Error marshalling request body:", err)
-		return
+		return fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
 	// create request
 	url := fmt.Sprintf("%s/api/v4/posts", baseUrl)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	if err != nil {
-		slog.Error("Error creating request:", err)
-		return
+		return fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
@@ -59,30 +57,28 @@ func PostMessage(baseUrl string, channelID string, token string, fileKey string)
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		slog.Error("Error sending request:", err)
-		return
+		return fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		slog.Error("Error response from server:", "StatusCode", resp.StatusCode)
-		return
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("error response from server: StatusCode %d", resp.StatusCode)
 	}
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		slog.Error("Error reading response:", err)
-		return
+		return fmt.Errorf("error reading response: %w", err)
 	}
+
 	slog.Info("Response:", "URL", url, "Body", string(respBody))
+	return nil
 }
 
-func UploadImage(baseUrl string, channelID string, token string, filename string) string {
+func UploadImage(baseUrl string, channelID string, token string, filename string) (string, error) {
 	// open image file
 	file, err := os.Open(filename)
 	if err != nil {
-		slog.Error("Error opening file:", err)
-		return ""
+		return "", fmt.Errorf("failed to open file %s: %w", filename, err)
 	}
 	defer file.Close()
 
@@ -92,25 +88,21 @@ func UploadImage(baseUrl string, channelID string, token string, filename string
 	w.WriteField("channel_id", channelID)
 	part, err := w.CreateFormFile("files", filepath.Base(filename))
 	if err != nil {
-		slog.Error("Error creating form file:", err)
-		return ""
+		return "", fmt.Errorf("failed to create form file for %s: %w", filename, err)
 	}
 	_, err = io.Copy(part, file)
 	if err != nil {
-		slog.Error("Error copying file to form file:", err)
-		return ""
+		return "", fmt.Errorf("failed to copy file %s to form file: %w", filename, err)
 	}
 	if err := w.Close(); err != nil {
-		slog.Error("Error closing writer:", err)
-		return ""
+		return "", fmt.Errorf("failed to close writer: %w", err)
 	}
 
 	// create request
 	url := fmt.Sprintf("%s/api/v4/files", baseUrl)
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
-		slog.Error("Error creating request:", err)
-		return ""
+		return "", fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -120,27 +112,23 @@ func UploadImage(baseUrl string, channelID string, token string, filename string
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		slog.Error("Error sending request:", err)
-		return ""
+		return "", fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		slog.Error("Error response from server:", "StatusCode", resp.StatusCode)
-		return ""
+	if resp.StatusCode != http.StatusCreated {
+		return "", fmt.Errorf("error response from server: StatusCode %d", resp.StatusCode)
 	}
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		slog.Error("Error reading response:", err)
-		return ""
+		return "", fmt.Errorf("error reading response: %w", err)
 	}
 
 	data, err := UnmarshalUploadFileResponseBody(respBody)
 	if err != nil {
-		slog.Error("Error unmarshalling response body:", err)
-		return ""
+		return "", fmt.Errorf("error unmarshalling response body: %w", err)
 	}
 
-	return data.FileInfos[0].ID
+	return data.FileInfos[0].ID, nil
 }

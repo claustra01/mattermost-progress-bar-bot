@@ -11,7 +11,7 @@ import (
 	"gocv.io/x/gocv"
 )
 
-func GenerateImage() string {
+func GenerateImage() (string, error) {
 	// 画像のサイズを設定
 	width := 1000
 	height := 200
@@ -44,5 +44,5 @@ func GenerateImage() string {
 	gocv.IMWrite(filename, img)
 	slog.Info("Generated image:", filename)
 
-	return filename
+	return filename, nil
 }
