@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log/slog"
 	"os"
 
 	"github.com/claustra01/mattermost-progress-bar-bot/pkg/bot"
@@ -24,9 +25,21 @@ func main() {
 	}
 
 	job := func() {
-		filename := bot.GenerateImage()
-		fileKey := bot.UploadImage(baseUrl, channelID, token, filename)
-		bot.PostMessage(baseUrl, channelID, token, fileKey)
+		filename, err := bot.GenerateImage()
+		if err != nil {
+			slog.Error("Error generating image:", "ERROR", err)
+			return
+		}
+		fileKey, err := bot.UploadImage(baseUrl, channelID, token, filename)
+		if err != nil {
+			slog.Error("Error uploading image:", "ERROR", err)
+			return
+		}
+		err = bot.PostMessage(baseUrl, channelID, token, fileKey)
+		if err != nil {
+			slog.Error("Error posting message:", "ERROR", err)
+			return
+		}
 	}
 
 	c := cron.New()
