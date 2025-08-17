@@ -64,6 +64,11 @@ func PostMessage(baseUrl string, channelID string, token string, fileKey string)
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		slog.Error("Error response from server:", "StatusCode", resp.StatusCode)
+		return
+	}
+
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		slog.Error("Error reading response:", err)
@@ -119,6 +124,11 @@ func UploadImage(baseUrl string, channelID string, token string, filename string
 		return ""
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		slog.Error("Error response from server:", "StatusCode", resp.StatusCode)
+		return ""
+	}
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
